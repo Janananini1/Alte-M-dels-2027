@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wochenend-Abstimmung 2027</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Lato', sans-serif; background: #faf7f2; min-height: 100vh; }
+    .app { max-width: 680px; margin: 0 auto; padding: 32px 20px 64px; }
+    .header { text-align: center; margin-bottom: 40px; padding-bottom: 28px; border-bottom: 2px solid #1c1c1c; }
+    .header-kicker { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #b86a2e; font-weight: 700; margin-bottom: 10px; }
+    .header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 6vw, 44px); font-weight: 700; color: #1c1c1c; line-height: 1.1; }
+    .header h1 em { font-style: italic; font-weight: 400; color: #b86a2e; }
+    .header-sub { margin-top: 12px; font-size: 13px; color: #7a7060; font-weight: 300; }
+    .progress-bar { display: flex; gap: 6px; margin-bottom: 32px; justify-content: center; }
+    .progress-dot { width: 28px; height: 6px; border-radius: 3px; background: #ddd; transition: background 0.3s; }
+    .progress-dot.done { background: #3a6b4a; }
+    .progress-dot.current { background: #b86a2e; }
+    .voter-label { text-align: center; font-size: 13px; font-weight: 700; letter-spacing: 1px; color: #1c1c1c; margin-bottom: 24px; text-transform: uppercase; }
+    .name-section { background: white; border: 1px solid #e0d9cf; border-radius: 4px; padding: 20px 24px; margin-bottom: 24px; }
+    .name-section label { display: block; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; color: #7a7060; margin-bottom: 8px; }
+    .name-input { width: 100%; border: 1.5px solid #d0c9bf; border-radius: 3px; padding: 10px 14px; font-family: 'Lato', sans-serif; font-size: 15px; color: #1c1c1c; background: #faf7f2; outline: none; }
+    .name-input:focus { border-color: #b86a2e; }
+    .section-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; color: #7a7060; margin-bottom: 12px; }
+    .month-group { margin-bottom: 20px; }
+    .month-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #b86a2e; font-weight: 700; margin-bottom: 8px; padding-left: 2px; }
+    .weekend-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+    .weekend-btn { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: white; border: 1.5px solid #e0d9cf; border-radius: 4px; cursor: pointer; text-align: left; width: 100%; }
+    .weekend-btn:hover { border-color: #b86a2e; background: #fdf5ee; }
+    .weekend-btn.selected { border-color: #3a6b4a; background: #e8f0eb; }
+    .check { width: 18px; height: 18px; border-radius: 3px; border: 2px solid #ccc; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: white; }
+    .weekend-btn.selected .check { background: #3a6b4a; border-color: #3a6b4a; }
+    .we-date { font-size: 13px; font-weight: 700; color: #1c1c1c; line-height: 1.3; }
+    .we-kw { font-size: 10px; color: #9a8f82; font-weight: 300; }
+    .submit-btn { width: 100%; margin-top: 28px; padding: 16px; background: #1c1c1c; color: white; border: none; border-radius: 4px; font-family: 'Lato', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
+    .submit-btn:hover { background: #b86a2e; }
+    .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .select-hint { text-align: center; font-size: 12px; color: #9a8f82; margin-top: 10px; }
+    .result-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin-bottom: 6px; background: white; border: 1px solid #e0d9cf; border-radius: 4px; }
+    .result-row.top { border-left: 4px solid #3a6b4a; background: #e8f0eb; }
+    .result-row.winner { border-left: 4px solid #b86a2e; background: #fdf0e4; }
+    .result-count { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #1c1c1c; min-width: 32px; text-align: center; }
+    .result-bar-wrap { flex: 1; }
+    .result-date { font-size: 13px; font-weight: 700; color: #1c1c1c; margin-bottom: 4px; }
+    .result-bar { height: 6px; background: #e0d9cf; border-radius: 3px; overflow: hidden; }
+    .result-bar-fill { height: 100%; background: #3a6b4a; border-radius: 3px; }
+    .result-row.winner .result-bar-fill { background: #b86a2e; }
+    .result-voters { font-size: 10px; color: #9a8f82; margin-top: 3px; }
+    .result-crown { font-size: 18px; }
+    .winner-box { margin: 32px 0; padding: 28px; background: #1c1c1c; color: white; border-radius: 6px; text-align: center; }
+    .winner-box .trophy { font-size: 36px; margin-bottom: 12px; }
+    .winner-box h3 { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 6px; }
+    .winner-date { font-size: 28px; font-weight: 700; color: #e8a96a; font-family: 'Playfair Display', serif; margin: 8px 0 4px; }
+    .winner-sub { font-size: 13px; color: #aaa; font-weight: 300; }
+    .draw-btn { width: 100%; padding: 16px; background: #b86a2e; color: white; border: none; border-radius: 4px; font-family: 'Lato', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-bottom: 12px; }
+    .draw-btn:hover { background: #9a5820; }
+    .reset-btn { width: 100%; padding: 12px; background: transparent; color: #9a8f82; border: 1px solid #d0c9bf; border-radius: 4px; font-family: 'Lato', sans-serif; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+    .reset-btn:hover { border-color: #c0392b; color: #c0392b; }
+    .who-voted { margin-top: 20px; padding: 16px; background: white; border: 1px solid #e0d9cf; border-radius: 4px; }
+    .who-voted-title { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7a7060; font-weight: 700; margin-bottom: 10px; }
+    .voter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .voter-chip { padding: 4px 10px; background: #e8f0eb; border-radius: 20px; font-size: 12px; color: #3a6b4a; font-weight: 700; }
+    .error { background: #fdecea; border: 1px solid #f5c6c2; border-radius: 4px; padding: 12px 16px; color: #c0392b; font-size: 13px; margin-bottom: 16px; }
+    .loading { text-align: center; padding: 40px; color: #7a7060; font-size: 14px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+// ── Konfiguration ──────────────────────────────────────────────
+// WICHTIG: Trage hier deine Firebase-Daten ein (siehe Anleitung unten)
+const FIREBASE_URL = "DEINE_FIREBASE_URL_HIER"; // z.B. "https://abstimmung-12345-default-rtdb.firebaseio.com"
+const TOTAL_VOTERS = 10;
+
+const WEEKENDS = [
+  { id: 1,  label: "16.–17. Januar",    kw: "KW 2"  },
+  { id: 2,  label: "23.–24. Januar",    kw: "KW 3"  },
+  { id: 3,  label: "30.–31. Januar",    kw: "KW 4"  },
+  { id: 4,  label: "06.–07. Februar",   kw: "KW 5"  },
+  { id: 5,  label: "13.–14. Februar",   kw: "KW 6"  },
+  { id: 6,  label: "20.–21. Februar",   kw: "KW 7"  },
+  { id: 7,  label: "10.–11. April",     kw: "KW 14" },
+  { id: 8,  label: "17.–18. April",     kw: "KW 15" },
+  { id: 9,  label: "24.–25. April",     kw: "KW 16" },
+  { id: 10, label: "29.–30. Mai",       kw: "KW 21" },
+  { id: 11, label: "05.–06. Juni",      kw: "KW 22" },
+  { id: 12, label: "12.–13. Juni",      kw: "KW 23" },
+  { id: 13, label: "19.–20. Juni",      kw: "KW 24" },
+  { id: 14, label: "11.–12. September", kw: "KW 36" },
+  { id: 15, label: "18.–19. September", kw: "KW 37" },
+  { id: 16, label: "25.–26. September", kw: "KW 38" },
+  { id: 17, label: "02.–03. Oktober",   kw: "KW 39" },
+  { id: 18, label: "13.–14. November",  kw: "KW 45" },
+  { id: 19, label: "20.–21. November",  kw: "KW 46" },
+  { id: 20, label: "27.–28. November",  kw: "KW 47" },
+  { id: 21, label: "04.–05. Dezember",  kw: "KW 48" },
+  { id: 22, label: "11.–12. Dezember",  kw: "KW 49" },
+];
+
+const MONTHS = [
+  { name: "Januar",    ids: [1,2,3]       },
+  { name: "Februar",   ids: [4,5,6]       },
+  { name: "April",     ids: [7,8,9]       },
+  { name: "Mai",       ids: [10]          },
+  { name: "Juni",      ids: [11,12,13]    },
+  { name: "September", ids: [14,15,16]    },
+  { name: "Oktober",   ids: [17]          },
+  { name: "November",  ids: [18,19,20]    },
+  { name: "Dezember",  ids: [21,22]       },
+];
+
+// ── Firebase Helpers ───────────────────────────────────────────
+async function fbGet() {
+  const r = await fetch(`${FIREBASE_URL}/votes.json`);
+  const data = await r.json();
+  if (!data) return [];
+  return Object.values(data);
+}
+async function fbAdd(vote) {
+  await fetch(`${FIREBASE_URL}/votes.json`, {
+    method: "POST",
+    body: JSON.stringify(vote)
+  });
+}
+async function fbClear() {
+  await fetch(`${FIREBASE_URL}/votes.json`, { method: "DELETE" });
+}
+
+// ── App ────────────────────────────────────────────────────────
+const { useState, useEffect } = React;
+
+function App() {
+  const [votes, setVotes]     = useState([]);
+  const [phase, setPhase]     = useState("voting");
+  const [name, setName]       = useState("");
+  const [selected, setSelected] = useState([]);
+  const [winner, setWinner]   = useState(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+
+  useEffect(() => { loadVotes(); }, []);
+
+  async function loadVotes() {
+    try {
+      setLoading(true);
+      const v = await fbGet();
+      setVotes(v);
+      if (v.length >= TOTAL_VOTERS) setPhase("results");
+    } catch(e) {
+      setError("Verbindung zur Datenbank fehlgeschlagen. Bitte Firebase-URL prüfen.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggle(id) {
+    setSelected(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev,id]);
+  }
+
+  async function submitVote() {
+    if (!name.trim()) return;
+    try {
+      const vote = { name: name.trim(), weekends: selected };
+      await fbAdd(vote);
+      const updated = [...votes, vote];
+      setVotes(updated);
+      setName(""); setSelected([]);
+      if (updated.length >= TOTAL_VOTERS) setPhase("results");
+    } catch(e) {
+      setError("Fehler beim Speichern. Bitte nochmal versuchen.");
+    }
+  }
+
+  async function resetAll() {
+    if (!confirm("Wirklich alle Stimmen löschen?")) return;
+    await fbClear();
+    setVotes([]); setPhase("voting"); setWinner(null);
+  }
+
+  const tally = WEEKENDS.map(we => {
+    const count = votes.filter(v => (v.weekends||[]).includes(we.id)).length;
+    const voters = votes.filter(v => (v.weekends||[]).includes(we.id)).map(v=>v.name);
+    return {...we, count, voters};
+  }).sort((a,b)=>b.count-a.count);
+
+  const maxCount = tally[0]?.count ?? 0;
+  const topWeekends = tally.filter(w => w.count===maxCount && maxCount>0);
+
+  function drawWinner() {
+    setIsDrawing(true);
+    let i = 0;
+    const iv = setInterval(()=>{
+      setWinner(topWeekends[Math.floor(Math.random()*topWeekends.length)]);
+      if(++i>14){
+        clearInterval(iv);
+        setWinner(topWeekends[Math.floor(Math.random()*topWeekends.length)]);
+        setIsDrawing(false);
+      }
+    }, 120);
+  }
+
+  if (loading) return <div className="app"><div className="loading">⏳ Lade Abstimmungsdaten…</div></div>;
+
+  // ── ABSTIMMEN ──
+  if (phase === "voting") return (
+    <div className="app">
+      <div className="header">
+        <div className="header-kicker">Wochenend-Abstimmung 2027</div>
+        <h1>Wann kannst<br/><em>du dabei sein?</em></h1>
+        <p className="header-sub">Wähle alle Wochenenden, an denen du grundsätzlich Zeit hättest.</p>
+      </div>
+
+      <div className="progress-bar">
+        {Array.from({length:TOTAL_VOTERS}).map((_,i)=>(
+          <div key={i} className={`progress-dot ${i<votes.length?"done":i===votes.length?"current":""}`}/>
+        ))}
+      </div>
+      <div className="voter-label">Person {votes.length+1} von {TOTAL_VOTERS}</div>
+
+      {error && <div className="error">{error}</div>}
+
+      <div className="name-section">
+        <label>Dein Name</label>
+        <input className="name-input" type="text" placeholder="Name eingeben…"
+          value={name} onChange={e=>setName(e.target.value)}/>
+      </div>
+
+      <div className="section-title">Mögliche Wochenenden — alles anklicken, was passt</div>
+
+      {MONTHS.map(month=>(
+        <div className="month-group" key={month.name}>
+          <div className="month-label">{month.name}</div>
+          <div className="weekend-grid">
+            {month.ids.map(id=>{
+              const we = WEEKENDS.find(w=>w.id===id);
+              const isSel = selected.includes(id);
+              return (
+                <button key={id} className={`weekend-btn${isSel?" selected":""}`} onClick={()=>toggle(id)}>
+                  <div className="check">{isSel?"✓":""}</div>
+                  <div>
+                    <div className="we-date">{we.label}</div>
+                    <div className="we-kw">{we.kw}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      <button className="submit-btn" onClick={submitVote} disabled={!name.trim()}>
+        Abstimmen →
+      </button>
+      <div className="select-hint">
+        {selected.length===0 ? "Noch keine Wochenenden ausgewählt" : `${selected.length} Wochenende${selected.length>1?"n":""} ausgewählt`}
+      </div>
+
+      {votes.length>0 && (
+        <button className="reset-btn" style={{marginTop:32}} onClick={()=>setPhase("results")}>
+          Zwischenstand anzeigen ({votes.length}/{TOTAL_VOTERS})
+        </button>
+      )}
+    </div>
+  );
+
+  // ── ERGEBNIS ──
+  return (
+    <div className="app">
+      <div className="header">
+        <div className="header-kicker">Ergebnis · 2027</div>
+        <h1>Auswertung &<br/><em>Auslosung</em></h1>
+        <p className="header-sub">{votes.length} von {TOTAL_VOTERS} haben abgestimmt.
+          {maxCount>0 && ` ${topWeekends.length} Favorit${topWeekends.length>1?"en":""} mit je ${maxCount} Stimmen.`}
+        </p>
+      </div>
+
+      {winner && (
+        <div className="winner-box">
+          <div className="trophy">🎉</div>
+          <h3>Ausgelost!</h3>
+          <div className="winner-date">{winner.label}</div>
+          <div className="winner-sub">{winner.kw} · {winner.count} von {votes.length} können</div>
+        </div>
+      )}
+
+      {topWeekends.length>1 && !winner && (
+        <button className="draw-btn" onClick={drawWinner} disabled={isDrawing}>
+          {isDrawing?"🎲 Wird ausgelost…":`🎲 Jetzt auslosen (${topWeekends.length} Favoriten)`}
+        </button>
+      )}
+      {topWeekends.length===1 && !winner && maxCount>0 && (
+        <div className="winner-box">
+          <div className="trophy">🏆</div>
+          <h3>Klarer Gewinner!</h3>
+          <div className="winner-date">{topWeekends[0].label}</div>
+          <div className="winner-sub">{topWeekends[0].kw} · {topWeekends[0].count} Stimmen</div>
+        </div>
+      )}
+
+      {tally.filter(w=>w.count>0).map(w=>(
+        <div key={w.id} className={`result-row${w.id===winner?.id?" winner":w.count===maxCount?" top":""}`}>
+          {w.id===winner?.id?<span className="result-crown">🥇</span>:w.count===maxCount?<span className="result-crown">⭐</span>:null}
+          <div className="result-count">{w.count}</div>
+          <div className="result-bar-wrap">
+            <div className="result-date">{w.label} <span style={{fontWeight:300,fontSize:11,color:"#9a8f82"}}>{w.kw}</span></div>
+            <div className="result-bar"><div className="result-bar-fill" style={{width:`${(w.count/votes.length)*100}%`}}/></div>
+            <div className="result-voters">{w.voters.join(", ")}</div>
+          </div>
+        </div>
+      ))}
+
+      <div className="who-voted">
+        <div className="who-voted-title">Abgestimmt haben</div>
+        <div className="voter-chips">
+          {votes.map((v,i)=><span className="voter-chip" key={i}>{v.name}</span>)}
+        </div>
+      </div>
+
+      {votes.length<TOTAL_VOTERS && (
+        <button className="submit-btn" style={{marginTop:24}} onClick={()=>setPhase("voting")}>
+          ← Zurück zur Abstimmung ({TOTAL_VOTERS-votes.length} fehlen noch)
+        </button>
+      )}
+      <button className="reset-btn" onClick={resetAll}>Abstimmung zurücksetzen</button>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById("root"));
+</script>
+
+</body>
+</html>
